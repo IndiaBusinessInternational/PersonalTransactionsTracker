@@ -274,7 +274,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="tsm-logo"><span>TSM</span></div>
       <div>
-        <div class="app-name">Personal Transactions Tracker <span class="ver-badge">v3.4</span></div>
+        <div class="app-name">Personal Transactions Tracker <span class="ver-badge">v3.5</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -443,7 +443,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">Personal Transactions Tracker v3.4 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">Personal Transactions Tracker v3.5 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -462,7 +462,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="toggleTheme();closeDrawer()"><i class="ti ti-sun"></i> Toggle Dark / Light Mode</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 3.4 — June 2026</div>
+  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 3.5 — June 2026</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -688,7 +688,8 @@ function cancelEdit(){
   document.getElementById('formCard').classList.remove('editing');
   document.getElementById('formTitle').innerHTML = '<i class="ti ti-plus"></i> Add Transaction';
   document.getElementById('btnSave').classList.remove('mode-edit');
-  document.getElementById('btnSaveLabel').textContent = 'Save to Google Drive';
+  const _lbl = document.getElementById('btnSaveLabel');           // absent while the Save button shows its spinner
+  if(_lbl) _lbl.textContent = 'Save to Google Drive';
   render();
 }
 
@@ -701,8 +702,8 @@ async function saveEntry(){
   btn.disabled=true;
   btn.innerHTML='<div class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></div> '+(editingId?'Updating...':'Saving...');
   const wasEditing = editingId;
-  const savedDesc  = desc;
-  const savedDate  = date;
+  const savedDesc  = desc, savedParty = party, savedAmount = amount, savedDate = date;
+  const prevCount  = entries.length;
   try{
     const params = editingId
       ? {action:'update', id:editingId, date, type:txType, description:desc, party, amount, note}
@@ -715,34 +716,42 @@ async function saveEntry(){
       showToast('Error: '+res.message, 'error');
     }
   } catch(e){
-    // GAS cold-start or network blip — verify by re-fetching before showing error
-    console.warn('Fetch threw, verifying if GAS actually saved...', e);
-    try {
-      await new Promise(r => setTimeout(r, 2500)); // wait 2.5s for GAS to finish
-      const check = await gasCall({action:'getAll'});
-      if(check.status === 'ok'){
-        const saved = check.transactions || [];
-        // Check if the entry exists in the sheet
-        const found = saved.some(t =>
-          t.description === savedDesc &&
-          (t.date || '').startsWith(savedDate.slice(0,7)) // same month
-        );
-        if(found){
-          showToast((wasEditing ? 'Updated' : 'Saved') + ' ✓ (GAS cold start — verified OK)');
-          entries = saved; cancelEdit(); render();
-        } else {
-          showToast('Not saved — please try again', 'error');
+    // Save fetch threw — usually a GAS cold start or a slow/flaky mobile link, NOT a real failure.
+    // The write often lands while the client gives up waiting, so poll Google Drive a few times before deciding.
+    console.warn('Save fetch threw — verifying against Google Drive before reporting...', e);
+    let verified = null, latest = null;            // true = saved, false = not saved, null = couldn't reach
+    for(let i = 0; i < 3 && verified === null; i++){
+      await new Promise(r => setTimeout(r, [2500, 3000, 4000][i])); // give a cold GAS time to finish, then poll
+      try{
+        const check = await gasCall({action:'getAll'}, 1, 12000); // GAS is warming now — one quick try per poll
+        if(check && check.status === 'ok'){
+          latest = check.transactions || [];
+          if(wasEditing){
+            const row = latest.find(t => t.id === wasEditing);
+            verified = !!(row && row.description === savedDesc && String(row.party) === savedParty
+                          && Math.abs(Number(row.amount) - savedAmount) < 0.005);
+          } else {
+            verified = latest.length > prevCount && latest.some(t =>
+              t.description === savedDesc && String(t.party) === savedParty
+              && Math.abs(Number(t.amount) - savedAmount) < 0.005 && (t.date || '') === savedDate);
+          }
         }
-      } else {
-        showToast('Failed — check connection', 'error');
-      }
-    } catch(e2){
-      showToast('Failed — check connection', 'error');
-      console.error(e2);
+      } catch(_){ /* still unreachable — keep polling */ }
     }
+    if(verified === true){
+      showToast((wasEditing ? 'Updated' : 'Saved') + ' ✓ (confirmed in Google Drive)');
+      if(latest) entries = latest;
+      cancelEdit(); render();
+    } else if(verified === false){
+      showToast('Not saved — please tap Save again', 'error');
+    } else {
+      // Couldn't confirm or deny — keep the form filled so nothing is lost; steer away from blind retry (avoids dupes).
+      showToast('Slow connection — couldn’t confirm. Tap Sync; re-save only if it’s missing.', 'error');
+    }
+  } finally {
+    btn.disabled=false;                                          // always re-enable, even if a branch above throws
+    btn.innerHTML='<i class="ti ti-device-floppy"></i> <span id="btnSaveLabel">'+(editingId?'Update in Google Drive':'Save to Google Drive')+'</span>';
   }
-  btn.disabled=false;
-  btn.innerHTML='<i class="ti ti-device-floppy"></i> <span id="btnSaveLabel">'+(editingId?'Update in Google Drive':'Save to Google Drive')+'</span>';
 }
 
 async function deleteEntry(id){
