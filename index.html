@@ -169,6 +169,8 @@ td{padding:11px 13px;border-bottom:1px solid var(--border);vertical-align:middle
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--bg3)}
 tr.row-editing td{background:var(--info-bg) !important}
+.dt-cell{white-space:normal !important;line-height:1.35}
+.dt-sub{font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap}
 .pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;font-family:var(--font)}
 .pill.income{background:var(--success-bg);color:var(--success-text)}
 .pill.expense{background:var(--danger-bg);color:var(--danger-text)}
@@ -209,6 +211,32 @@ tr.row-editing td{background:var(--info-bg) !important}
 .drawer-item i{font-size:18px;color:var(--cyan);width:22px;flex-shrink:0}
 .drawer-section-label{padding:10px 16px 4px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-weight:600}
 
+/* ── REPORT MODAL ── */
+.s-btn.rep-btn{border-color:var(--cyan);color:var(--cyan);font-weight:600}
+.s-btn.rep-btn:hover{background:var(--cyan);color:#000}
+.report-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:400;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.report-overlay.open{opacity:1;pointer-events:all}
+.report-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-48%) scale(0.98);width:min(700px,94vw);max-height:90vh;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);z-index:401;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;overflow:hidden}
+.report-modal.open{opacity:1;pointer-events:all;transform:translate(-50%,-50%) scale(1)}
+.report-hdr{background:var(--black);border-bottom:2px solid var(--cyan);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.report-hdr-title{color:var(--cyan);font-weight:700;font-size:14px;font-family:var(--font);text-transform:uppercase;letter-spacing:0.06em;display:flex;align-items:center;gap:7px}
+.report-body{padding:16px;overflow-y:auto}
+.report-controls{display:flex;flex-direction:column;gap:12px;margin-bottom:6px}
+.report-controls .gen-btn{margin-top:2px}
+.report-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg3)}
+.rep-period{text-align:center;font-size:16px;font-weight:700;color:var(--text);margin:6px 0 14px;font-family:var(--font)}
+.rep-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+.rep-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 10px;text-align:center}
+.rep-card .lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text2);margin-bottom:5px}
+.rep-card .val{font-size:18px;font-weight:700;font-family:var(--font)}
+.rep-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 6px;display:flex;align-items:center;gap:6px}
+.rep-table{width:100%;border-collapse:collapse;font-size:12px}
+.rep-table th{text-align:left;padding:7px 8px;color:var(--text2);border-bottom:1px solid var(--border);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.04em}
+.rep-table td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
+.rep-table tfoot td{font-weight:700;border-top:2px solid var(--border2);border-bottom:none;color:var(--text)}
+.rep-empty{text-align:center;color:var(--text3);padding:20px;font-size:13px}
+.rep-empty i{display:block;font-size:30px;margin-bottom:8px}
+
 /* ── MOBILE ── */
 @media(max-width:600px){
   html,body{padding:0;margin:0}
@@ -246,7 +274,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="tsm-logo"><span>TSM</span></div>
       <div>
-        <div class="app-name">Personal Transactions Tracker <span class="ver-badge">v3.2</span></div>
+        <div class="app-name">Personal Transactions Tracker <span class="ver-badge">v3.4</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -312,6 +340,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <div class="status-bar">
     <span class="status-txt"><span class="status-dot" id="statusDot"></span><span id="statusTxt">Connecting...</span></span>
     <div class="status-actions">
+      <button class="s-btn rep-btn" onclick="openReport()"><i class="ti ti-report-money"></i> Report</button>
       <button class="s-btn" onclick="loadAll()"><i class="ti ti-refresh"></i> Sync</button>
       <a class="s-btn" href="https://docs.google.com/spreadsheets/d/1NAGUMsMjvsAGrTa_o0jt1NTD2uJOZPCSw3Qqbg68pVw" target="_blank"><i class="ti ti-external-link"></i> Sheet</a>
       <button class="s-btn" onclick="exportCSV()"><i class="ti ti-download"></i> CSV</button>
@@ -382,8 +411,8 @@ tr.row-editing td{background:var(--info-bg) !important}
         <option value="expense">Expense</option>
       </select>
       <select id="filterSort" onchange="render()">
-        <option value="date-asc">Date ↑</option>
-        <option value="date-desc">Date ↓</option>
+        <option value="date-desc" selected>Date ↓ (Newest first)</option>
+        <option value="date-asc">Date ↑ (Oldest first)</option>
         <option value="amount-desc">Amount ↓</option>
       </select>
       <input type="text" id="filterSearch" placeholder="Search..." oninput="render()" style="width:140px">
@@ -393,7 +422,7 @@ tr.row-editing td{background:var(--info-bg) !important}
         <thead>
           <tr>
             <th style="width:36px">#</th>
-            <th style="width:100px">Date</th>
+            <th style="width:150px">Date &amp; Time</th>
             <th style="width:88px">Type</th>
             <th style="width:185px">Description</th>
             <th style="width:120px">Party</th>
@@ -414,7 +443,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">Personal Transactions Tracker v3.2 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">Personal Transactions Tracker v3.4 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -425,6 +454,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
   </div>
   <div class="drawer-section-label">App</div>
+  <button class="drawer-item" onclick="closeDrawer();openReport()"><i class="ti ti-report-money"></i> Monthly Report</button>
   <button class="drawer-item" onclick="loadAll();closeDrawer()"><i class="ti ti-refresh"></i> Sync with Google Drive</button>
   <button class="drawer-item" onclick="exportCSV();closeDrawer()"><i class="ti ti-download"></i> Export CSV</button>
   <a class="drawer-item" href="https://docs.google.com/spreadsheets/d/1NAGUMsMjvsAGrTa_o0jt1NTD2uJOZPCSw3Qqbg68pVw" target="_blank" onclick="closeDrawer()"><i class="ti ti-external-link"></i> Open Google Sheet</a>
@@ -432,7 +462,38 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="toggleTheme();closeDrawer()"><i class="ti ti-sun"></i> Toggle Dark / Light Mode</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 3.2 — June 2026</div>
+  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 3.4 — June 2026</div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="report-overlay" id="reportOverlay" onclick="closeReport()"></div>
+<div class="report-modal" id="reportModal" role="dialog" aria-modal="true" aria-label="Income and Expenditure Report">
+  <div class="report-hdr">
+    <span class="report-hdr-title"><i class="ti ti-report-money"></i> Income &amp; Expenditure Report</span>
+    <button class="drawer-close" onclick="closeReport()" aria-label="Close"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="report-body">
+    <div class="report-controls">
+      <div class="type-toggle">
+        <button class="type-btn active-income" id="rbMonth" onclick="setReportMode('month')"><i class="ti ti-calendar-month"></i> By Month</button>
+        <button class="type-btn" id="rbRange" onclick="setReportMode('range')"><i class="ti ti-calendar-stats"></i> Date Range</button>
+      </div>
+      <div id="reportMonthWrap" class="form-grid">
+        <div class="form-group"><label for="rMonth">Month</label><select id="rMonth"></select></div>
+        <div class="form-group"><label for="rYear">Year</label><select id="rYear"></select></div>
+      </div>
+      <div id="reportRangeWrap" class="form-grid" style="display:none">
+        <div class="form-group"><label for="rFrom">From Date</label><input type="date" id="rFrom"></div>
+        <div class="form-group"><label for="rTo">To Date</label><input type="date" id="rTo"></div>
+      </div>
+      <button class="btn-save gen-btn" onclick="generateReport()"><i class="ti ti-file-analytics"></i> Generate Report</button>
+    </div>
+    <div id="reportOutput" class="report-output" style="display:none"></div>
+  </div>
+  <div class="report-actions" id="reportActions" style="display:none">
+    <button class="s-btn" onclick="printReport()"><i class="ti ti-printer"></i> Print / Save PDF</button>
+    <button class="s-btn rep-btn" onclick="downloadReportCSV()"><i class="ti ti-download"></i> Download CSV</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -523,6 +584,31 @@ function fmtDate(s){
     return `${String(d.getDate()).padStart(2,'0')} ${M[d.getMonth()]} ${d.getFullYear()}`;
   } catch(e){ return s; }
 }
+const _DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const _MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// Date + weekday come from the entry date; time-of-day comes from createdAt (shown in IST).
+// e.g. { date: "28 May 2026", sub: "Thu, 01:38:00 PM" }
+function fmtDTParts(e){
+  const m = String(e.date||'').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return { date: fmtDate(e.date), sub: '' };
+  const dObj = new Date(+m[1], +m[2]-1, +m[3]);
+  const datePart = `${String(dObj.getDate()).padStart(2,'0')} ${_MON[dObj.getMonth()]} ${dObj.getFullYear()}`;
+  const dow = _DOW[dObj.getDay()];
+  let time = '';
+  if(e.createdAt){
+    const ca = new Date(e.createdAt);
+    if(!isNaN(ca.getTime())){
+      time = ca.toLocaleTimeString('en-US', {timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
+    } else {
+      const t = String(e.createdAt).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])?/);
+      if(t){ let hh=+t[1]; const mm=t[2], ss=t[3]||'00'; let ap=(t[4]||'').toUpperCase();
+        if(!ap){ ap = hh>=12?'PM':'AM'; hh = hh%12 || 12; }
+        time = `${String(hh).padStart(2,'0')}:${mm}:${ss} ${ap}`; }
+    }
+  }
+  return { date: datePart, sub: time ? `${dow}, ${time}` : dow };
+}
+function fmtDTLine(e){ const p = fmtDTParts(e); return p.sub ? `${p.date}, ${p.sub}` : p.date; }
 function setStatus(online, msg){
   document.getElementById('statusDot').className = 'status-dot ' + (online ? 'online' : 'error');
   document.getElementById('statusTxt').textContent = msg;
@@ -543,18 +629,19 @@ function today(){ return new Date().toISOString().split('T')[0]; }
 document.getElementById('fDate').value = today();
 
 // ── GAS — all via GET, with auto-retry on failure ──
-async function gasCall(params, retries=2){
+async function gasCall(params, retries=2, timeoutMs=20000){
   const url = GAS_URL + '?' + new URLSearchParams(params).toString();
   for(let attempt = 1; attempt <= retries; attempt++){
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs); // 20s — GAS cold starts can exceed 12s
     try{
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 12000); // 12s timeout
       const r = await fetch(url, {redirect:'follow', signal: controller.signal});
+      const text = await r.text();          // keep the abort timer armed through the body read
       clearTimeout(timer);
-      const text = await r.text();
       try{ return JSON.parse(text); }
       catch(e){ throw new Error('Bad JSON: '+text.slice(0,80)); }
     } catch(e){
+      clearTimeout(timer);
       if(attempt === retries) throw e;
       console.warn(`gasCall attempt ${attempt} failed, retrying...`, e.message);
       await new Promise(r => setTimeout(r, 1500 * attempt)); // 1.5s, then 3s
@@ -691,7 +778,15 @@ function filtered(){
     if(q&&!`${e.description}${e.party}${e.note}`.toLowerCase().includes(q)) return false;
     return true;
   });
-  list.sort((a,b)=>sort==='date-asc'?(a.date||'').localeCompare(b.date||''):sort==='date-desc'?(b.date||'').localeCompare(a.date||''):b.amount-a.amount);
+  // tie-break same-date rows by creation time (createdAt, else the timestamp baked into the ID)
+  const _ts=e=>{ const t=Date.parse(e.createdAt); if(!isNaN(t)) return t; const m=String(e.id||'').match(/(\d{10,})/); return m?+m[1]:0; };
+  const tcmp=(a,b)=>_ts(a)-_ts(b);
+  list.sort((a,b)=>{
+    if(sort==='amount-desc') return b.amount-a.amount;
+    const d=(a.date||'').localeCompare(b.date||'');
+    if(sort==='date-asc') return d!==0 ? d : tcmp(a,b);
+    return d!==0 ? -d : -tcmp(a,b);   // date-desc default: newest date, then newest time
+  });
   return list;
 }
 
@@ -714,10 +809,12 @@ function render(){
   } else ps.style.display='none';
   if(!list.length){ body.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
-  body.innerHTML=list.map((e,i)=>`
+  body.innerHTML=list.map((e,i)=>{
+    const dt=fmtDTParts(e);
+    return `
     <tr class="${editingId===e.id?'row-editing':''}">
       <td style="color:var(--text2)">${i+1}</td>
-      <td style="color:var(--text2);font-size:12px">${fmtDate(e.date)}</td>
+      <td class="dt-cell" style="color:var(--text2);font-size:12px"><div>${dt.date}</div>${dt.sub?`<div class="dt-sub">${dt.sub}</div>`:''}</td>
       <td><span class="pill ${e.type}">${e.type==='income'?'<i class="ti ti-arrow-down-circle"></i> Income':'<i class="ti ti-arrow-up-circle"></i> Expense'}</span></td>
       <td title="${e.description}">${e.description}</td>
       <td title="${e.party}" style="color:var(--text2)">${e.party}</td>
@@ -727,14 +824,15 @@ function render(){
         <button class="action-btn edit" onclick="startEdit('${e.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
         <button class="action-btn del"  onclick="deleteEntry('${e.id}')" title="Delete"><i class="ti ti-trash"></i></button>
       </div></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 function exportCSV(){
   if(!entries.length){ showToast('No data to export','error'); return; }
   const sorted=[...entries].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  const rows=[['#','Date','Type','Description','Party','Amount','Note']];
-  sorted.forEach((e,i)=>rows.push([i+1,fmtDate(e.date),e.type,e.description,e.party,e.amount,e.note||'']));
+  const rows=[['#','Date & Time','Type','Description','Party','Amount','Note']];
+  sorted.forEach((e,i)=>rows.push([i+1,fmtDTLine(e),e.type,e.description,e.party,e.amount,e.note||'']));
   const income=entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
   const expense=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
   rows.push([],[' ',' ',' ',' ','Total Income',income,''],[' ',' ',' ',' ','Total Expense',expense,''],[' ',' ',' ',' ','Net Balance',income-expense,'']);
@@ -742,6 +840,180 @@ function exportCSV(){
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
   a.download='personal_transactions.csv'; a.click();
+}
+
+// ── MONTHLY / DATE-RANGE REPORT ──
+const _MONFULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+let reportMode='month', lastReport=null;
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function buildReportSelects(){
+  const now=new Date(), curY=now.getFullYear();
+  const mSel=document.getElementById('rMonth'), ySel=document.getElementById('rYear');
+  if(!mSel.options.length) mSel.innerHTML=_MONFULL.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  // year list spans the data range (or last 3 years) up to the current year, newest first
+  let minY=curY-2;
+  entries.forEach(e=>{ const y=parseInt((e.date||'').slice(0,4),10); if(y && y<minY) minY=y; });
+  const prev=ySel.value, years=[];
+  for(let y=curY;y>=minY;y--) years.push(y);
+  ySel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  ySel.value=(prev && years.includes(+prev))?prev:String(curY);
+  if(!mSel.value) mSel.value=String(now.getMonth()+1);
+}
+function openReport(){
+  buildReportSelects();
+  const pad=n=>String(n).padStart(2,'0'), d=new Date();
+  const fEl=document.getElementById('rFrom'), tEl=document.getElementById('rTo');
+  if(!fEl.value) fEl.value=`${d.getFullYear()}-${pad(d.getMonth()+1)}-01`; // 1st of this month
+  if(!tEl.value) tEl.value=today();
+  document.getElementById('reportModal').classList.add('open');
+  document.getElementById('reportOverlay').classList.add('open');
+}
+function closeReport(){
+  document.getElementById('reportModal').classList.remove('open');
+  document.getElementById('reportOverlay').classList.remove('open');
+}
+function setReportMode(m){
+  reportMode=m;
+  document.getElementById('rbMonth').className='type-btn'+(m==='month'?' active-income':'');
+  document.getElementById('rbRange').className='type-btn'+(m==='range'?' active-income':'');
+  document.getElementById('reportMonthWrap').style.display=m==='month'?'grid':'none';
+  document.getElementById('reportRangeWrap').style.display=m==='range'?'grid':'none';
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeReport(); });
+
+// Resolve the selected period to inclusive ISO bounds (yyyy-mm-dd) + a human label.
+function reportPeriod(){
+  if(reportMode==='month'){
+    const m=+document.getElementById('rMonth').value, y=+document.getElementById('rYear').value;
+    if(!m||!y) return null;
+    const mm=String(m).padStart(2,'0'), last=new Date(y,m,0).getDate();
+    return { from:`${y}-${mm}-01`, to:`${y}-${mm}-${String(last).padStart(2,'0')}`, label:`${_MONFULL[m-1]} ${y}` };
+  }
+  const from=document.getElementById('rFrom').value, to=document.getElementById('rTo').value;
+  if(!from||!to) return null;
+  if(from>to) return { invalid:true };
+  return { from, to, label:`${fmtDate(from)} → ${fmtDate(to)}` };
+}
+
+function generateReport(){
+  const p=reportPeriod();
+  if(!p){ showToast('Pick a month/year, or both From & To dates','error'); return; }
+  if(p.invalid){ showToast('“From” date must be on or before “To” date','error'); return; }
+  const _ts=e=>{ const t=Date.parse(e.createdAt); if(!isNaN(t)) return t; const m=String(e.id||'').match(/(\d{10,})/); return m?+m[1]:0; };
+  const inRange=entries.filter(e=>{ const d=e.date||''; return d>=p.from && d<=p.to; })
+    .sort((a,b)=>{ const d=(a.date||'').localeCompare(b.date||''); return d!==0?-d:-(_ts(a)-_ts(b)); });
+  const incomes=inRange.filter(e=>e.type==='income'), expenses=inRange.filter(e=>e.type==='expense');
+  const tInc=incomes.reduce((s,e)=>s+e.amount,0), tExp=expenses.reduce((s,e)=>s+e.amount,0), net=tInc-tExp;
+  lastReport={p,inRange,incomes,expenses,tInc,tExp,net};
+
+  const out=document.getElementById('reportOutput');
+  if(!inRange.length){
+    out.innerHTML=`<div class="rep-period">${esc(p.label)}</div><div class="rep-empty"><i class="ti ti-inbox"></i>No transactions in this period.</div>`;
+    out.style.display='block';
+    document.getElementById('reportActions').style.display='none';
+    return;
+  }
+  const sec=(rows,kind)=>{
+    if(!rows.length) return `<div class="rep-empty" style="padding:10px 0">No ${kind} entries in this period.</div>`;
+    const sub=rows.reduce((s,e)=>s+e.amount,0);
+    return `<table class="rep-table"><thead><tr><th style="width:88px">Date</th><th>Description</th><th>Party</th><th style="width:92px;text-align:right">Amount</th></tr></thead><tbody>`
+      +rows.map(e=>`<tr><td>${fmtDate(e.date)}</td><td>${esc(e.description)}</td><td style="color:var(--text2)">${esc(e.party)}</td><td style="text-align:right" class="amt-${e.type}">${fmt(e.amount)}</td></tr>`).join('')
+      +`</tbody><tfoot><tr><td colspan="3">Subtotal — ${rows.length} entr${rows.length===1?'y':'ies'}</td><td style="text-align:right">${fmt(sub)}</td></tr></tfoot></table>`;
+  };
+  out.innerHTML=`
+    <div class="rep-period">${esc(p.label)}</div>
+    <div class="rep-summary">
+      <div class="rep-card"><div class="lbl">Total Income</div><div class="val" style="color:var(--success-text)">${fmt(tInc)}</div></div>
+      <div class="rep-card"><div class="lbl">Total Expenditure</div><div class="val" style="color:var(--danger-text)">${fmt(tExp)}</div></div>
+      <div class="rep-card"><div class="lbl">Net Balance</div><div class="val" style="color:${net>=0?'var(--cyan)':'var(--danger-text)'}">${fmt(net)}</div></div>
+    </div>
+    <div class="rep-section-title" style="color:var(--success-text)"><i class="ti ti-arrow-down-circle"></i> Income</div>
+    ${sec(incomes,'income')}
+    <div class="rep-section-title" style="color:var(--danger-text)"><i class="ti ti-arrow-up-circle"></i> Expenditure</div>
+    ${sec(expenses,'expense')}`;
+  out.style.display='block';
+  document.getElementById('reportActions').style.display='flex';
+}
+
+function printReport(){
+  if(!lastReport){ showToast('Generate a report first','error'); return; }
+  const {p,incomes,expenses,tInc,tExp,net}=lastReport;
+  const M=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+  const genAt=new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+  const block=(rows,title,color)=>{
+    if(!rows.length) return `<h3 style="color:${color};margin:16px 0 4px">${title}</h3><p style="color:#777;margin:0 0 12px">No entries in this period.</p>`;
+    const sub=rows.reduce((s,e)=>s+e.amount,0);
+    return `<h3 style="color:${color};margin:16px 0 6px">${title}</h3>`
+      +`<table><thead><tr><th>Date &amp; Time</th><th>Description</th><th>Party</th><th class="r">Amount</th></tr></thead><tbody>`
+      +rows.map(e=>`<tr><td>${esc(fmtDTLine(e))}</td><td>${esc(e.description)}</td><td>${esc(e.party)}</td><td class="r">${M(e.amount)}</td></tr>`).join('')
+      +`</tbody><tfoot><tr><td colspan="3">Subtotal (${rows.length})</td><td class="r">${M(sub)}</td></tr></tfoot></table>`;
+  };
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Income & Expenditure — ${esc(p.label)}</title>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#111;margin:26px;font-size:13px}
+    h1{font-size:19px;margin:0;color:#0a7ea4}
+    h2{font-size:15px;margin:2px 0;font-weight:600}
+    h3{font-size:14px}
+    .muted{color:#666;font-size:12px}
+    .head{border-bottom:2px solid #0a7ea4;padding-bottom:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px}
+    .cards{display:flex;gap:10px;margin:14px 0}
+    .card{flex:1;border:1px solid #ddd;border-radius:8px;padding:10px;text-align:center}
+    .card .l{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#666}
+    .card .v{font-size:17px;font-weight:700;margin-top:4px}
+    table{width:100%;border-collapse:collapse;margin-bottom:4px}
+    th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;font-size:12px;vertical-align:top}
+    th{background:#f2f6f8}
+    td.r,th.r{text-align:right;white-space:nowrap}
+    tfoot td{font-weight:700;background:#fafafa}
+    .net{margin-top:12px;font-size:15px;font-weight:700;text-align:right}
+    .foot{margin-top:24px;border-top:1px solid #ddd;padding-top:8px;color:#666;font-size:11px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+    @media print{ body{margin:12mm} }
+  </style></head><body>
+    <div class="head">
+      <div><h1>Personal Transactions Tracker</h1><h2>Income &amp; Expenditure Report</h2><div class="muted">Dr. T. Sasimurugan — India Business International</div></div>
+      <div style="text-align:right"><div style="font-size:16px;font-weight:700">${esc(p.label)}</div><div class="muted">${incomes.length+expenses.length} transaction(s)</div></div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="l">Total Income</div><div class="v" style="color:#1a7d1a">${M(tInc)}</div></div>
+      <div class="card"><div class="l">Total Expenditure</div><div class="v" style="color:#b11">${M(tExp)}</div></div>
+      <div class="card"><div class="l">Net Balance</div><div class="v" style="color:${net>=0?'#0a7ea4':'#b11'}">${M(net)}</div></div>
+    </div>
+    ${block(incomes,'Income','#1a7d1a')}
+    ${block(expenses,'Expenditure','#b11')}
+    <div class="net">Net Balance: <span style="color:${net>=0?'#0a7ea4':'#b11'}">${M(net)}</span></div>
+    <div class="foot"><span>Generated ${esc(genAt)} IST</span><span>indiabusinessinternational@gmail.com</span></div>
+  </body></html>`;
+  const win=window.open('','_blank');
+  if(!win){ showToast('Allow pop-ups to print, or use Download CSV','error'); return; }
+  win.document.open(); win.document.write(html); win.document.close(); win.focus();
+  setTimeout(()=>{ try{ win.print(); }catch(e){} }, 400);
+}
+
+function downloadReportCSV(){
+  if(!lastReport){ showToast('Generate a report first','error'); return; }
+  const {p,incomes,expenses,tInc,tExp,net}=lastReport;
+  const rows=[
+    ['Personal Transactions Tracker — Income & Expenditure Report'],
+    ['Period', p.label],
+    ['Generated', new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})+' IST'],
+    []
+  ];
+  let i=0;
+  rows.push(['INCOME'],['#','Date & Time','Description','Party','Amount','Note']);
+  incomes.forEach(e=>rows.push([++i,fmtDTLine(e),e.description,e.party,e.amount,e.note||'']));
+  rows.push([' ',' ',' ','Total Income',tInc,''],[]);
+  i=0;
+  rows.push(['EXPENDITURE'],['#','Date & Time','Description','Party','Amount','Note']);
+  expenses.forEach(e=>rows.push([++i,fmtDTLine(e),e.description,e.party,e.amount,e.note||'']));
+  rows.push([' ',' ',' ','Total Expenditure',tExp,''],[]);
+  rows.push([' ',' ',' ','Net Balance',net,'']);
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
+  const slug=p.label.replace(/[^0-9a-zA-Z]+/g,'_').replace(/^_|_$/g,'').toLowerCase();
+  a.download=`ptt_report_${slug}.csv`; a.click();
 }
 
 // ── SERVICE WORKER ──
