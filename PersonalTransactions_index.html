@@ -51,6 +51,9 @@ body[data-theme="light"]{
 }
 
 html,body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+/* Native widgets (date calendar, select dropdown) follow the app theme */
+body{color-scheme:dark}
+body[data-theme="light"]{color-scheme:light}
 
 /* ── TOPBAR ── */
 .topbar{background:var(--black);border-bottom:2px solid var(--cyan);position:sticky;top:0;z-index:200;padding:0 16px}
@@ -131,6 +134,9 @@ html,body{font-family:var(--font);background:var(--bg);color:var(--text);min-hei
 label{font-size:12px;color:var(--text2);font-weight:500;font-family:var(--font)}
 input,select{width:100%;padding:10px 12px;font-size:15px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);outline:none;transition:border-color 0.15s;font-family:var(--font)}
 input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,197,255,0.12)}
+/* Date fields: theme-matched native calendar, visible indicator, whole field clickable */
+input[type="date"]{cursor:pointer}
+input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:0.85}
 .type-toggle{display:flex;gap:8px}
 .type-btn{flex:1;padding:10px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all 0.15s;font-family:var(--font);font-weight:500}
 .type-btn.active-income{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border)}
@@ -280,7 +286,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="tsm-logo"><span>TSM</span></div>
       <div>
-        <div class="app-name">Personal Transactions Tracker <span class="ver-badge">v3.6</span></div>
+        <div class="app-name">Personal Transactions Tracker <span class="ver-badge">v3.7</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -456,7 +462,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">Personal Transactions Tracker v3.6 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">Personal Transactions Tracker v3.7 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -475,7 +481,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="toggleTheme();closeDrawer()"><i class="ti ti-sun"></i> Toggle Dark / Light Mode</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 3.6 — July 2026</div>
+  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 3.7 — July 2026</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -588,7 +594,7 @@ function openDrawer(){ document.getElementById('drawer').classList.add('open'); 
 function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('open'); }
 
 // ── UTILS ──
-function fmt(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function fmt(n){ return '₹' + (Number(n)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtDate(s){
   if(!s) return '';
   try{
@@ -640,6 +646,13 @@ function setType(t){
 }
 function today(){ return new Date().toISOString().split('T')[0]; }
 document.getElementById('fDate').value = today();
+
+// Date fields: open the native calendar from a click/tap anywhere on the field,
+// not just the tiny indicator icon. showPicker needs a user gesture; browsers
+// without it (older Safari) keep their default behaviour via the try/catch.
+document.querySelectorAll('input[type="date"]').forEach(el=>{
+  el.addEventListener('click',()=>{ try{ if(el.showPicker) el.showPicker(); }catch(_){} });
+});
 
 // ── GAS — all via GET, with auto-retry on failure ──
 async function gasCall(params, retries=2, timeoutMs=20000){
@@ -977,7 +990,7 @@ function generateReport(){
 function printReport(){
   if(!lastReport){ showToast('Generate a report first','error'); return; }
   const {p,incomes,expenses,tInc,tExp,net}=lastReport;
-  const M=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+  const M=n=>'₹'+(Number(n)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
   const genAt=new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
   const block=(rows,title,color)=>{
     if(!rows.length) return `<h3 style="color:${color};margin:16px 0 4px">${title}</h3><p style="color:#777;margin:0 0 12px">No entries in this period.</p>`;
