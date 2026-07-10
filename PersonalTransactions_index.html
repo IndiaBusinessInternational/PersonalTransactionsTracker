@@ -7,21 +7,21 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Txn Tracker">
-<meta name="description" content="Personal Transactions Tracker by Dr. T. Sasimurugan">
-<title>Personal Transactions Tracker</title>
+<meta name="description" content="Personal Finance Tracker by Dr. T. Sasimurugan">
+<title>Personal Finance Tracker</title>
 <!-- Open Graph / social sharing -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="India Business International">
-<meta property="og:title" content="Personal Transactions Tracker">
+<meta property="og:title" content="Personal Finance Tracker">
 <meta property="og:description" content="Track personal income, expenses and balances — fast entry, insights and monthly reports.">
 <meta property="og:url" content="https://indiabusinessinternational.github.io/PersonalTransactionsTracker/">
 <meta property="og:image" content="https://indiabusinessinternational.github.io/PersonalTransactionsTracker/og-banner.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Personal Transactions Tracker — India Business International">
+<meta property="og:image:alt" content="Personal Finance Tracker — India Business International">
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Personal Transactions Tracker">
+<meta name="twitter:title" content="Personal Finance Tracker">
 <meta name="twitter:description" content="Track personal income, expenses and balances — fast entry, insights and monthly reports.">
 <meta name="twitter:image" content="https://indiabusinessinternational.github.io/PersonalTransactionsTracker/og-banner.png">
 <link rel="manifest" href="manifest.json">
@@ -301,7 +301,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="tsm-logo"><span>TSM</span></div>
       <div>
-        <div class="app-name">Personal Transactions Tracker <span class="ver-badge">v3.8</span></div>
+        <div class="app-name">Personal Finance Tracker <span class="ver-badge">v3.9</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -477,7 +477,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">Personal Transactions Tracker v3.8 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">Personal Finance Tracker v3.9 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -520,6 +520,7 @@ tr.row-editing td{background:var(--info-bg) !important}
         <div class="form-group"><label for="rFrom">From Date</label><input type="date" id="rFrom"></div>
         <div class="form-group"><label for="rTo">To Date</label><input type="date" id="rTo"></div>
       </div>
+      <div class="form-group"><label for="rKeyword">Filter by keyword <span style="color:var(--text3);font-weight:400">— party / description (optional)</span></label><input type="text" id="rKeyword" placeholder="e.g. Milk — leave blank for everything"></div>
       <button class="btn-save gen-btn" onclick="generateReport()"><i class="ti ti-file-analytics"></i> Generate Report</button>
     </div>
     <div id="reportOutput" class="report-output" style="display:none"></div>
@@ -932,6 +933,8 @@ function openReport(){
   const fEl=document.getElementById('rFrom'), tEl=document.getElementById('rTo');
   if(!fEl.value) fEl.value=`${d.getFullYear()}-${pad(d.getMonth()+1)}-01`; // 1st of this month
   if(!tEl.value) tEl.value=today();
+  const curSearch=document.getElementById('filterSearch').value.trim();
+  if(curSearch) document.getElementById('rKeyword').value=curSearch; // carry over whatever you were searching in the table
   document.getElementById('reportModal').classList.add('open');
   document.getElementById('reportOverlay').classList.add('open');
 }
@@ -967,7 +970,11 @@ function generateReport(){
   if(!p){ showToast('Pick a month/year, or both From & To dates','error'); return; }
   if(p.invalid){ showToast('“From” date must be on or before “To” date','error'); return; }
   const _ts=e=>{ const t=Date.parse(e.createdAt); if(!isNaN(t)) return t; const m=String(e.id||'').match(/(\d{10,})/); return m?+m[1]:0; };
-  const inRange=entries.filter(e=>{ const d=e.date||''; return d>=p.from && d<=p.to; })
+  const kw=document.getElementById('rKeyword').value.trim();
+  if(kw) p.label += ` · “${kw}”`;   // reflect the keyword in the report title, print & CSV
+  const kwl=kw.toLowerCase();
+  const inRange=entries.filter(e=>{ const d=e.date||''; if(d<p.from||d>p.to) return false;
+      return !kwl || `${e.description||''} ${e.party||''} ${e.note||''}`.toLowerCase().includes(kwl); })
     .sort((a,b)=>{ const d=(a.date||'').localeCompare(b.date||''); return d!==0?-d:-(_ts(a)-_ts(b)); });
   const incomes=inRange.filter(e=>e.type==='income'), expenses=inRange.filter(e=>e.type==='expense');
   const tInc=incomes.reduce((s,e)=>s+e.amount,0), tExp=expenses.reduce((s,e)=>s+e.amount,0), net=tInc-tExp;
@@ -1038,7 +1045,7 @@ function printReport(){
     @media print{ body{margin:12mm} }
   </style></head><body>
     <div class="head">
-      <div><h1>Personal Transactions Tracker</h1><h2>Income &amp; Expenditure Report</h2><div class="muted">Dr. T. Sasimurugan — India Business International</div></div>
+      <div><h1>Personal Finance Tracker</h1><h2>Income &amp; Expenditure Report</h2><div class="muted">Dr. T. Sasimurugan — India Business International</div></div>
       <div style="text-align:right"><div style="font-size:16px;font-weight:700">${esc(p.label)}</div><div class="muted">${incomes.length+expenses.length} transaction(s)</div></div>
     </div>
     <div class="cards">
@@ -1061,7 +1068,7 @@ function downloadReportCSV(){
   if(!lastReport){ showToast('Generate a report first','error'); return; }
   const {p,incomes,expenses,tInc,tExp,net}=lastReport;
   const rows=[
-    ['Personal Transactions Tracker — Income & Expenditure Report'],
+    ['Personal Finance Tracker — Income & Expenditure Report'],
     ['Period', p.label],
     ['Generated', new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})+' IST'],
     []

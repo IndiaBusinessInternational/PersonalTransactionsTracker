@@ -1,6 +1,6 @@
 {
-  "name": "Personal Transactions Tracker",
-  "short_name": "Txn Tracker",
+  "name": "Personal Finance Tracker",
+  "short_name": "Finance",
   "description": "Personal income & expense tracker by Dr. T. Sasimurugan",
   "start_url": "./index.html",
   "display": "standalone",
