@@ -600,6 +600,20 @@ const TYPE_HINT = {
   settlement: 'Clears what you already owe. Not counted as spend again — the credit entries already did that.'
 };
 
+/* The Type column is plain text in the Sheet and is routinely typed by hand
+   there (that is how rows get re-classed in bulk). "Credit", " SETTLEMENT ",
+   "Settlements" must therefore all land on the canonical value — otherwise the
+   row silently fails every e.type check and renders as a plain expense, which
+   is exactly the double-count this release exists to kill. Anything we still
+   don't recognise stays as typed and is treated as an expense by isExpenseT,
+   i.e. the pre-v4.0 behaviour. */
+function normType(e){
+  const t = String(e.type||'').trim().toLowerCase().replace(/s$/,'');
+  const canon = { income:'income', expense:'expense', credit:'credit', settlement:'settlement',
+                  unpaid:'credit', due:'credit', settle:'settlement', payment:'settlement' }[t];
+  return canon ? { ...e, type:canon } : e;
+}
+
 /* Outstanding per party = credit taken − settled. Only credit/settlement
    rows take part: a plain cash expense is square the moment it happens, so it
    must never look like something owed. */
@@ -802,7 +816,7 @@ async function loadAll(){
   document.getElementById('txBody').innerHTML            = '';
   try{
     const data = await gasCall({action:'getAll'});
-    if(data.status==='ok'){ entries=data.transactions||[]; setStatus(true,'Connected — Google Drive'); render(); }
+    if(data.status==='ok'){ entries=(data.transactions||[]).map(normType); setStatus(true,'Connected — Google Drive'); render(); }
     else{ setStatus(false,'Error: '+data.message); showToast('Load failed','error'); }
   }catch(e){ setStatus(false,'Connection failed'); showToast('Cannot reach Google Drive','error'); console.error(e); }
   document.getElementById('loadingState').style.display = 'none';
