@@ -397,7 +397,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="tsm-logo"><span>TSM</span></div>
       <div>
-        <div class="app-name">Personal Finance Tracker <span class="ver-badge">v5.0</span></div>
+        <div class="app-name">Personal Finance Tracker <span class="ver-badge">v5.1</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -585,7 +585,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">Personal Finance Tracker v5.0 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">Personal Finance Tracker v5.1 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -604,7 +604,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="toggleTheme();closeDrawer()"><i class="ti ti-sun"></i> Toggle Dark / Light Mode</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 5.0 — July 2026</div>
+  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 5.1 — July 2026</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -688,6 +688,15 @@ const isSettleT = e => e.type === 'settlement';
 // Both cash expenses and credit purchases are real spend — the only difference
 // is whether the money has left yet.
 const isExpenseT = e => e.type === 'expense' || e.type === 'credit';
+/* Money out, stated as "not income and not a settlement" (v5.1).
+   The Sheet's Type column is plain text and hand-edited, so a typo like
+   "Expence" survives normType(). isExpenseT does not match it, which meant a
+   typo'd row was listed in the table but counted in NO total — money silently
+   vanishing from the headline, the filter summary and the CSV while the report
+   (which uses this predicate) included it, so the two disagreed. Everything
+   that totals spend must use these two. */
+const repIsOut     = e => !isIncomeT(e) && !isSettleT(e);   // cash + credit + anything unrecognised
+const repIsCashOut = e => repIsOut(e) && !isCreditT(e);     // ...that moved money on the day
 const TYPE_META = {
   income:     { label:'Income',          icon:'ti-arrow-down-circle', sign:'+' },
   expense:    { label:'Expense',         icon:'ti-arrow-up-circle',   sign:'−' },
@@ -1065,9 +1074,10 @@ function filtered(){
 function render(){
   const list=filtered(), body=document.getElementById('txBody'), empty=document.getElementById('emptyState');
   const income=entries.filter(isIncomeT).reduce((s,e)=>s+e.amount,0);
-  // Expense = cash expenses + credit purchases. Settlements are deliberately
-  // excluded: they pay off credit that was already counted here.
-  const expense=entries.filter(isExpenseT).reduce((s,e)=>s+e.amount,0);
+  // Expense = cash expenses + credit purchases (+ any unrecognised type, which
+  // is money out too). Settlements are deliberately excluded: they pay off
+  // credit that was already counted here.
+  const expense=entries.filter(repIsOut).reduce((s,e)=>s+e.amount,0);
   const net=income-expense;
   document.getElementById('sumIncome').textContent=fmt(income);
   document.getElementById('sumExpense').textContent=fmt(expense);
@@ -1080,7 +1090,7 @@ function render(){
   const fsBox=document.getElementById('filterSummary');
   if(fq||fType!=='all'){
     const fInc=list.filter(isIncomeT).reduce((s,e)=>s+e.amount,0);
-    const fExp=list.filter(isExpenseT).reduce((s,e)=>s+e.amount,0);
+    const fExp=list.filter(repIsOut).reduce((s,e)=>s+e.amount,0);
     const fSet=list.filter(isSettleT).reduce((s,e)=>s+e.amount,0);
     // Net here = what's still owed after payments: income − expense + money already settled.
     // Settlements pay down credit that's already inside fExp, so adding them back gives the
@@ -1136,7 +1146,7 @@ function exportCSV(){
   const rows=[['#','Date & Time','Type','Description','Party','Amount','Note']];
   sorted.forEach((e,i)=>rows.push([i+1,fmtDTLine(e),e.type,e.description,e.party,e.amount,e.note||'']));
   const income=entries.filter(isIncomeT).reduce((s,e)=>s+e.amount,0);
-  const expense=entries.filter(isExpenseT).reduce((s,e)=>s+e.amount,0);
+  const expense=entries.filter(repIsOut).reduce((s,e)=>s+e.amount,0);
   rows.push([],[' ',' ',' ',' ','Total Income',income,''],[' ',' ',' ',' ','Total Expense',expense,''],[' ',' ',' ',' ','Net Balance',income-expense,'']);
   const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'\"')}"` ).join(',')).join('\n');
   const a=document.createElement('a');
@@ -1409,8 +1419,6 @@ function repQuery(p,f,skip){
    income and not a settlement is money out — that keeps the totals, the
    listings and the category roll-up reconciling against each other even when
    the type is unrecognised. */
-const repIsOut     = e => !isIncomeT(e) && !isSettleT(e);      // cash + credit + anything unrecognised
-const repIsCashOut = e => repIsOut(e) && !isCreditT(e);        // ...that moved money on the day
 function analyse(rows,p){
   const incomes=rows.filter(isIncomeT);
   const cashExp=rows.filter(repIsCashOut);
@@ -2236,7 +2244,7 @@ function printReport(){
     <div class="sec">${block(A.expenses,'Expenditure — full listing (paid on the spot + taken on credit)',RED)}</div>
     ${A.settles.length?`<div class="sec">${block(A.settles,'Settlements — full listing (clearing earlier credit; not counted as spend again)',CY)}</div>`:''}
     <div class="sec">${qTbl}</div>
-    <div class="foot"><span>Generated ${esc(genAt)} IST — Personal Finance Tracker v5.0</span><span>indiabusinessinternational@gmail.com</span></div>
+    <div class="foot"><span>Generated ${esc(genAt)} IST — Personal Finance Tracker v5.1</span><span>indiabusinessinternational@gmail.com</span></div>
   </body></html>`;
   const win=window.open('','_blank');
   if(!win){ showToast('Allow pop-ups to print, or use Download CSV','error'); return; }
