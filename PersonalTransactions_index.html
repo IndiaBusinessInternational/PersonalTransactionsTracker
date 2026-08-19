@@ -1683,7 +1683,10 @@ function render(){
   document.getElementById('sumIncome').textContent=fmt(income);
   document.getElementById('sumExpense').textContent=fmt(expense);
   const netEl=document.getElementById('sumNet');
-  netEl.textContent=fmt(net); netEl.className='metric-value '+(net>=0?'positive':'negative');
+  // fmt() puts the sign after the rupee symbol — "₹-84,753.97". The headline is
+  // the one figure here that is routinely negative, so it reads as "−₹84,753.97"
+  // like every other signed figure in the reports.
+  netEl.textContent=fmtS(net); netEl.className='metric-value '+(net>=0?'positive':'negative');
   document.getElementById('sumCount').textContent=entries.length;
   document.getElementById('countBadge').textContent=list.length;
   // summary of the filtered rows — shown whenever a search term or type filter is active
