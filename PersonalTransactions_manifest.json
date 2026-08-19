@@ -1,6 +1,6 @@
 {
-  "name": "Personal Finance Tracker",
-  "short_name": "Finance",
+  "name": "TSM Personal Transactions Tracker",
+  "short_name": "TSM Tracker",
   "description": "Personal income & expense tracker by Dr. T. Sasimurugan",
   "start_url": "./index.html",
   "display": "standalone",
