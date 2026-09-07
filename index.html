@@ -619,7 +619,7 @@ tr.row-editing td{background:var(--info-bg) !important}
            app is named on its own: the tab title, the manifest, the footer, the
            printed report and the social card. -->
       <div class="topbar-title">
-        <div class="app-name"><span class="app-name-text">Personal Transactions Tracker</span><span class="ver-badge">v6.1</span></div>
+        <div class="app-name"><span class="app-name-text">Personal Transactions Tracker</span><span class="ver-badge">v6.2</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -903,7 +903,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <div id="commitList" class="cm-list"></div>
 </div><!-- /viewCommit -->
 
-  <div class="footer">TSM Personal Transactions Tracker v6.1 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">TSM Personal Transactions Tracker v6.2 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -2512,7 +2512,7 @@ async function savePay(){
       // about the plan either, and one tap of Cancel undoes the whole thing.
       const res = await gasCall({
         action:'add', date,
-        type: isIn ? 'income' : 'expense',
+        type: isIn ? 'income' : ledgerTypeFor(p),
         description: p.item,
         party: p.party || (isIn ? 'Received' : 'Paid'),
         amount: amt,
@@ -2530,6 +2530,15 @@ async function savePay(){
     if(ok){ closePay(); showToast(isIn ? 'Recorded as received' : 'Recorded as paid'); }
   }catch(e){ if(!AUTH_LOST) showToast('Could not reach Google Drive', 'error'); }
   finally{ gateBusy('paySaveBtn', false, '', '<i class="ti ti-check"></i> Record it'); }
+}
+
+/* v3.0 — a Savings/RD or Gold/Chit instalment is money put AWAY, not spent.
+   An app whose ledger knows the 'saving' type gets it; one that does not keeps
+   writing 'expense' — so this block still reads the same in all three trackers. */
+function ledgerTypeFor(p){
+  const c = p.commitmentId ? commitments.find(x=>x.id===p.commitmentId) : null;
+  const asset = !!(c && KINDS[c.kind] && KINDS[c.kind].asset);
+  return (asset && typeof TYPE_META !== 'undefined' && TYPE_META.saving) ? 'saving' : 'expense';
 }
 
 /* The instalment stamp that goes into the ledger note — so the Sheet row on
@@ -4243,7 +4252,7 @@ function printReport(){
     <div class="sec">${block(A.expenses,'Expenditure — full listing (paid on the spot + taken on credit)',RED)}</div>
     ${A.settles.length?`<div class="sec">${block(A.settles,'Settlements — full listing (clearing earlier credit; not counted as spend again)',CY)}</div>`:''}
     <div class="sec">${qTbl}</div>
-    <div class="foot"><span>Generated ${esc(genAt)} IST — TSM Personal Transactions Tracker v6.1</span><span>indiabusinessinternational@gmail.com</span></div>
+    <div class="foot"><span>Generated ${esc(genAt)} IST — TSM Personal Transactions Tracker v6.2</span><span>indiabusinessinternational@gmail.com</span></div>
   </body></html>`;
   const win=window.open('','_blank');
   if(!win){ showToast('Allow pop-ups to print, or use Download CSV','error'); return; }
