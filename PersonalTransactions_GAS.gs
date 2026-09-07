@@ -1,4 +1,4 @@
-// TSM Personal Transactions Tracker — GAS Backend v6.6  (same version number as the web app)
+// TSM Personal Transactions Tracker — GAS Backend v6.7  (same version number as the web app)
 // Sheet ID: 1NAGUMsMjvsAGrTa_o0jt1NTD2uJOZPCSw3Qqbg68pVw
 // All requests via GET (URL params) — avoids CORS/redirect issues
 // Deploy → Web App → Execute as Me → Access: Anyone
@@ -27,7 +27,7 @@
 
 const SHEET_NAME = "Transactions";
 const HEADERS    = ["ID","Date","Type","Description","Party","Amount","Note","CreatedAt",
-                    "PaidBy","Mode"];
+                    "PaidBy","Mode","Category"];   // Category appended, same append-only rule
 
 const COMMIT_SHEET = "Commitments";
 const COMMIT_HDRS  = ["ID","Name","Kind","Category","Party","Amount","DueDay","Freq",
@@ -40,10 +40,10 @@ const PLAN_HDRS  = ["ID","Month","Side","CommitmentId","Item","Category","Party"
                     "Proposed","Actual","DueDate","PaidDate","Status","PayMode",
                     "PaidBy","TxId","Note","Sort","CreatedAt"];
 
-const APP_VERSION = "6.6";   // kept in step with the web app's badge (7 Sep 2026)
+const APP_VERSION = "6.7";   // kept in step with the web app's badge (7 Sep 2026)
 // Lets a page newer than this deployment detect what it can do, and say
 // "update your Apps Script" instead of failing oddly at Save.
-const FEATURES    = ["plans", "commitments", "paidby"];
+const FEATURES    = ["plans", "commitments", "paidby", "category"];   // category: Category column on Transactions
 
 /* ── SHEET PLUMBING ─────────────────────────────────────────────────────────
    One helper builds every data sheet, so a sheet added in a later version
@@ -76,7 +76,7 @@ function styleHeader_(sh, n) {
 }
 
 function getSheet() {
-  return getNamedSheet(SHEET_NAME, HEADERS, [130, 100, 80, 240, 170, 100, 210, 150, 110, 100]);
+  return getNamedSheet(SHEET_NAME, HEADERS, [130, 100, 80, 240, 170, 100, 210, 150, 110, 100, 170]);
 }
 
 function sheetTZ_() {
@@ -192,7 +192,8 @@ function readTransactions_(tz) {
         note:        r[6] || '',
         createdAt:   r[7] || '',
         paidBy:      str_(r[8]),
-        mode:        str_(r[9])
+        mode:        str_(r[9]),
+        category:    str_(r[10])
       };
     });
 }
@@ -283,7 +284,8 @@ function addTransaction(p) {
       p.note   || '',
       stamp_(),
       p.paidBy || '',
-      p.mode   || ''
+      p.mode   || '',
+      p.category || ''
     ]);
     SpreadsheetApp.flush();
     return { status:'ok', id: id, message:'Added successfully.' };
@@ -316,7 +318,7 @@ function updateTransaction(p) {
           num_(p.amount),
           p.note        || ''
         ]]);
-        sh.getRange(i + 1, 9, 1, 2).setValues([[p.paidBy || '', p.mode || '']]);
+        sh.getRange(i + 1, 9, 1, 3).setValues([[p.paidBy || '', p.mode || '', p.category || '']]);
         SpreadsheetApp.flush();
         return { status:'ok', message:'Updated: ' + p.id };
       }
