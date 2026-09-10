@@ -1,4 +1,4 @@
-﻿const CACHE = 'ptt-v6.8.2';
+﻿const CACHE = 'ptt-v6.9';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {

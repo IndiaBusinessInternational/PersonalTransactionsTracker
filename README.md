@@ -1,11 +1,11 @@
-# TSM Personal Transactions Tracker v6.8.2
+# TSM Personal Transactions Tracker v6.9
 
 Dr. T. Sasimurugan's personal income and expense PWA — ledger, monthly plan,
 commitments and reports.
 
 **Live:** <https://indiabusinessinternational.github.io/PersonalTransactionsTracker/>
 
-**Voice entry (v6.8.2)** — speak one sentence, check it on screen, confirm (or say
+**Voice entry (v6.9)** — speak one sentence, check it on screen, confirm (or say
 “save”). The same block as the two sibling trackers (Mini Personal Finance
 Tracker, IBI Finance Tracker), byte-identical apart from the worked examples.
 Nothing is written to the Sheet until Confirm & Save.
