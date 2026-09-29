@@ -1,4 +1,4 @@
-// TSM Personal Transactions Tracker — GAS Backend v6.10  (same version number as the web app)
+// TSM Personal Transactions Tracker — GAS Backend v6.12  (same version number as the web app)
 // Sheet ID: 1NAGUMsMjvsAGrTa_o0jt1NTD2uJOZPCSw3Qqbg68pVw
 // All requests via GET (URL params) — avoids CORS/redirect issues
 // Deploy → Web App → Execute as Me → Access: Anyone
