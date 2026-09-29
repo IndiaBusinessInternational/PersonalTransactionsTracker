@@ -40,10 +40,10 @@ const PLAN_HDRS  = ["ID","Month","Side","CommitmentId","Item","Category","Party"
                     "Proposed","Actual","DueDate","PaidDate","Status","PayMode",
                     "PaidBy","TxId","Note","Sort","CreatedAt"];
 
-const APP_VERSION = "6.11";   // kept in step with the web app's badge (7 Sep 2026)
+const APP_VERSION = "6.12";   // kept in step with the web app's badge (7 Sep 2026)
 // Lets a page newer than this deployment detect what it can do, and say
 // "update your Apps Script" instead of failing oddly at Save.
-const FEATURES    = ["plans", "commitments", "paidby", "category"];   // category: Category column on Transactions
+const FEATURES    = ["plans", "commitments", "paidby", "category", "rid"];   // category: Category column on Transactions
 
 /* ── SHEET PLUMBING ─────────────────────────────────────────────────────────
    One helper builds every data sheet, so a sheet added in a later version
@@ -272,7 +272,9 @@ function addTransaction(p) {
   }
   try {
     const sh = getSheet();
-    const id = 'TX' + Date.now();
+    const again = ridSeen_(p);
+    if (again) return again;
+    const id  = 'TX' + Date.now();
 
     sh.appendRow([
       id,
@@ -288,7 +290,7 @@ function addTransaction(p) {
       p.category || ''
     ]);
     SpreadsheetApp.flush();
-    return { status:'ok', id: id, message:'Added successfully.' };
+    return ridKeep_(p, { status:'ok', id: id, message:'Added successfully.' });
   } finally {
     try { lock.releaseLock(); } catch (e) {}
   }
@@ -408,10 +410,12 @@ function saveCommitment(p) {
       }
       return { status:'error', message:'Commitment not found: ' + p.id };
     }
+    const again = ridSeen_(p);
+    if (again) return again;
     const id = 'CM' + Date.now();
     sh.appendRow(commitmentRow_(id, p, stamp_()));
     SpreadsheetApp.flush();
-    return { status:'ok', id:id, message:'Commitment saved.' };
+    return ridKeep_(p, { status:'ok', id:id, message:'Commitment saved.' });
   } finally {
     try { lock.releaseLock(); } catch (e) {}
   }
@@ -466,10 +470,12 @@ function savePlan(p) {
       }
       return { status:'error', message:'Plan row not found: ' + p.id };
     }
+    const again = ridSeen_(p);
+    if (again) return again;
     const id = 'PL' + Date.now();
     sh.appendRow(planRow_(id, p, stamp_()));
     SpreadsheetApp.flush();
-    return { status:'ok', id:id, message:'Plan row saved.' };
+    return ridKeep_(p, { status:'ok', id:id, message:'Plan row saved.' });
   } finally {
     try { lock.releaseLock(); } catch (e) {}
   }
@@ -511,4 +517,28 @@ function checkSetup() {
   Logger.log('Transactions : ' + Math.max(0, getSheet().getLastRow() - 1));
   Logger.log('Commitments  : ' + Math.max(0, getNamedSheet(COMMIT_SHEET, COMMIT_HDRS).getLastRow() - 1));
   Logger.log('Plan rows    : ' + Math.max(0, getNamedSheet(PLAN_SHEET, PLAN_HDRS).getLastRow() - 1));
+}
+
+/* ── NO REPEATS — idempotency key (pairs with the web app's NO REPEATS block) ──
+   Every create the app sends (ledger entry, plan line, commitment) carries a
+   request id, `rid`. A repeat of the same rid — a retry after a lost reply, a
+   Save tapped again — gets the FIRST answer back instead of a second row.
+   Checked INSIDE the script lock, so a slow first request and its repeat can
+   never both write. Six hours is the CacheService maximum. */
+function ridSeen_(p) {
+  const rid = String((p && p.rid) || '').trim();
+  if (!rid) return null;
+  const hit = CacheService.getScriptCache().get('rid_' + rid.slice(0, 200));
+  if (!hit) return null;
+  const first = JSON.parse(hit);
+  first.duplicate = true;
+  first.message = 'Already saved — not added twice.';
+  return first;
+}
+function ridKeep_(p, result) {
+  const rid = String((p && p.rid) || '').trim();
+  if (rid && result && result.status === 'ok') {
+    CacheService.getScriptCache().put('rid_' + rid.slice(0, 200), JSON.stringify(result), 21600);
+  }
+  return result;
 }
