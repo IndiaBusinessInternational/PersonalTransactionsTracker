@@ -1,4 +1,7 @@
-# TSM Personal Transactions Tracker v6.10.1
+# TSM Personal Transactions Tracker v6.11
+
+**Payment mode EFT (v6.11)** — *EFT — Electronic Funds Transfer* sits beside Bank transfer in every payment-mode list (ledger form, plan payment, commitment editor, voice check screen), and voice entry hears "by EFT" / "electronic funds transfer". Added for royalties such as Amazon KDP, whose payment reports name the method EFT. It is a label only — no total is split by mode — and the backend stores it as typed, so no Apps Script change is needed.
+
 
 Dr. T. Sasimurugan's personal income and expense PWA — ledger, monthly plan,
 commitments and reports.

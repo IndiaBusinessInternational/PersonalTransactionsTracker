@@ -40,7 +40,7 @@ const PLAN_HDRS  = ["ID","Month","Side","CommitmentId","Item","Category","Party"
                     "Proposed","Actual","DueDate","PaidDate","Status","PayMode",
                     "PaidBy","TxId","Note","Sort","CreatedAt"];
 
-const APP_VERSION = "6.10";   // kept in step with the web app's badge (7 Sep 2026)
+const APP_VERSION = "6.11";   // kept in step with the web app's badge (7 Sep 2026)
 // Lets a page newer than this deployment detect what it can do, and say
 // "update your Apps Script" instead of failing oddly at Save.
 const FEATURES    = ["plans", "commitments", "paidby", "category"];   // category: Category column on Transactions
