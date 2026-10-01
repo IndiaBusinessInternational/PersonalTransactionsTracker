@@ -1,4 +1,7 @@
-# TSM Finance Tracker v6.15
+# TSM Finance Tracker v6.16
+
+**Balances: edit, rename, delete (v6.16)** — every account card now has **Edit** (latest reading), **Rename** (renaming to an existing account's name offers to MERGE them — e.g. "HDFC Bank Savings Account" into "HDFC Savings"), and **Delete** (the account and all its readings, after a confirm); History rows gain a delete button. Changes show on screen at once and are sent in the background. GAS is a number-only bump.
+
 
 **Profile & Photo (v6.15)** — tap the photo (or the name) to change the photo, display name and subtitle any time; also in the menu. The photo is cropped square, shrunk to fit a Sheet cell, and kept in the Sheet's hidden **Settings** tab, so it shows on every device. It is UPLOADED in the request body (doPost reads the JSON) — Google refuses a URL over ~12,000 characters. "No photo" shows the TSM mark. Paste PersonalTransactions_GAS.gs 6.15 for the sync.
 
