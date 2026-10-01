@@ -1,4 +1,7 @@
-# TSM Finance Tracker v6.14
+# TSM Finance Tracker v6.15
+
+**Profile & Photo (v6.15)** — tap the photo (or the name) to change the photo, display name and subtitle any time; also in the menu. The photo is cropped square, shrunk to fit a Sheet cell, and kept in the Sheet's hidden **Settings** tab, so it shows on every device. It is UPLOADED in the request body (doPost reads the JSON) — Google refuses a URL over ~12,000 characters. "No photo" shows the TSM mark. Paste PersonalTransactions_GAS.gs 6.15 for the sync.
+
 
 **Renamed (v6.14)** — the app is now called **TSM Finance Tracker** wherever a person reads it (title, top bar "Finance Tracker" beside the TSM mark, footer, print and CSV headers, install name "TSM Finance", link preview + a redrawn og-banner.png, GAS ping). The address, repo and PersonalTransactions_ file names are unchanged, so bookmarks and the installed app keep working.
 

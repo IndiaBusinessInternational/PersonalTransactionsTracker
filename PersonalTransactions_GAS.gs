@@ -1,4 +1,4 @@
-// TSM Finance Tracker — GAS Backend v6.14  (same version number as the web app)
+// TSM Finance Tracker — GAS Backend v6.15  (same version number as the web app)
 // Sheet ID: 1NAGUMsMjvsAGrTa_o0jt1NTD2uJOZPCSw3Qqbg68pVw
 // All requests via GET (URL params) — avoids CORS/redirect issues
 // Deploy → Web App → Execute as Me → Access: Anyone
@@ -40,10 +40,10 @@ const PLAN_HDRS  = ["ID","Month","Side","CommitmentId","Item","Category","Party"
                     "Proposed","Actual","DueDate","PaidDate","Status","PayMode",
                     "PaidBy","TxId","Note","Sort","CreatedAt"];
 
-const APP_VERSION = "6.14";   // kept in step with the web app's badge (7 Sep 2026)
+const APP_VERSION = "6.15";   // kept in step with the web app's badge (7 Sep 2026)
 // Lets a page newer than this deployment detect what it can do, and say
 // "update your Apps Script" instead of failing oddly at Save.
-const FEATURES    = ["plans", "commitments", "paidby", "category", "rid", "balances"];   // category: Category column on Transactions
+const FEATURES    = ["plans", "commitments", "paidby", "category", "rid", "balances", "profile"];   // category: Category column on Transactions
 
 /* ── SHEET PLUMBING ─────────────────────────────────────────────────────────
    One helper builds every data sheet, so a sheet added in a later version
@@ -145,6 +145,8 @@ function doGet(e) {
       case 'saveBalance':      result = saveBalance(p);                               break;
       case 'deleteBalance':    result = deleteRowById(BAL_SHEET, BAL_HDRS, p.id);     break;
       case 'moveToBalances':   result = moveToBalances(p);                            break;
+      case 'getProfile':       result = getProfile_();                                break;
+      case 'saveProfile':      result = saveProfile_(p);                              break;
 
       default:
         result = { status:'error', message:'Unknown action: ' + action };
@@ -159,7 +161,18 @@ function doGet(e) {
 }
 
 // Keep doPost as fallback (same handler)
-function doPost(e) { return doGet(e); }
+/* The app UPLOADS large values (the profile photo) as a JSON body — Google
+   refuses a URL over ~12,000 characters. Body fields join the URL's. */
+function doPost(e) {
+  const p = (e && e.parameter) || {};
+  try {
+    if (e && e.postData && e.postData.contents) {
+      const body = JSON.parse(e.postData.contents);
+      Object.keys(body).forEach(function (k) { p[k] = body[k]; });
+    }
+  } catch (err) { /* not JSON — the query parameters stand on their own */ }
+  return doGet({ parameter: p });
+}
 
 /* ── READ EVERYTHING ────────────────────────────────────────────────────────
    One call returns the ledger, the standing commitments and every planned
@@ -173,6 +186,7 @@ function getAllData() {
     commitments:  readCommitments_(tz),
     plans:        readPlans_(tz),
     balances:       readBalances_(),
+    profileAt:      Number(readSetting_('profileAt') || 0),
     version:      APP_VERSION,
     features:     FEATURES
   };
@@ -663,5 +677,62 @@ function moveToBalances(p) {
     SpreadsheetApp.flush();
     return { status:'ok', moved: ok, added: add.length, removed: del.length,
              message: 'Moved ' + add.length + ' into Balances; removed ' + del.length + ' ledger rows.' };
+  } finally { try { lock.releaseLock(); } catch (e) {} }
+}
+
+/* ── PROFILE — name, subtitle and photo, shared by every device (v6.15) ──────
+   Ported from Mini Finance Tracker. A hidden 'Settings' sheet holds key/value
+   pairs; 'profileAt' is the version stamp the app compares on each sync, so
+   the (comparatively heavy) photo travels only when it has changed. */
+const SETTINGS_SHEET = 'Settings';
+const PROFILE_MAX = 45000;                     // a Sheet cell holds 50,000 characters
+
+function settingsSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(SETTINGS_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(SETTINGS_SHEET);
+    sh.appendRow(['Key', 'Value', 'UpdatedAt']);
+    sh.setFrozenRows(1);
+    styleHeader_(sh, 3);
+    sh.setColumnWidth(1, 140); sh.setColumnWidth(2, 420); sh.setColumnWidth(3, 170);
+    sh.hideSheet();
+  }
+  return sh;
+}
+function readSetting_(key) {
+  const rows = settingsSheet_().getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) if (String(rows[i][0]) === key) return String(rows[i][1] == null ? '' : rows[i][1]);
+  return '';
+}
+function writeSetting_(key, value) {
+  const sh = settingsSheet_();
+  const rows = sh.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === key) { sh.getRange(i + 1, 2, 1, 2).setValues([[value, stamp_()]]); return; }
+  }
+  sh.appendRow([key, value, stamp_()]);
+}
+function getProfile_() {
+  const raw = readSetting_('profile');
+  let profile = null;
+  if (raw) { try { profile = JSON.parse(raw); } catch (e) { profile = null; } }
+  return { status:'ok', profile: profile, profileAt: Number(readSetting_('profileAt') || 0) };
+}
+function saveProfile_(p) {
+  const raw = String(p.profile == null ? '' : p.profile);
+  if (!raw) return { status:'error', message:'No profile supplied.' };
+  if (raw.length > PROFILE_MAX) return { status:'error', message:'That photo is too large to sync. Please choose a smaller picture.' };
+  let obj;
+  try { obj = JSON.parse(raw); } catch (e) { return { status:'error', message:'Profile was not valid JSON.' }; }
+  const clean = JSON.stringify({ name: String(obj.name || '').slice(0, 120), sub: String(obj.sub || '').slice(0, 160), photo: String(obj.photo || '') });
+  const lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (e) { return { status:'error', message:'Busy — please try again in a moment.' }; }
+  try {
+    const at = Date.now();
+    writeSetting_('profile', clean);
+    writeSetting_('profileAt', String(at));
+    SpreadsheetApp.flush();
+    return { status:'ok', profileAt: at, message:'Profile saved.' };
   } finally { try { lock.releaseLock(); } catch (e) {} }
 }
