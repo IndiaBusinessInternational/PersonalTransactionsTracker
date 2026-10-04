@@ -1,4 +1,4 @@
-﻿const CACHE = 'ptt-v6.17.0';
+﻿const CACHE = 'ptt-v6.18.0';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
@@ -14,7 +14,8 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    // v6.18: only this app's own old caches — the Mini app shares this github.io origin
+    Promise.all(keys.filter(k => k !== CACHE && k.indexOf('ptt-') === 0).map(k => caches.delete(k)))
   ));
   self.clients.claim();
 });
