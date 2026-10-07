@@ -1,4 +1,6 @@
-# TSM Finance Tracker v6.20
+# TSM Finance Tracker v6.21
+
+**Explicit app identity (v6.21, 7 Oct 2026)** — the install manifest now names its id: `"id": "/PersonalTransactionsTracker/index.html"`. That is exactly the id Chrome already computed from `start_url` (verified against the installed app's own record on the CEO's PC), so existing installs carry on unchanged. Writing it down protects the app if `start_url` ever changes, and keeps it from ever sharing the bare-origin id that made an installed IBI Gold Mines open Screen Recorder Studio. GAS 6.21 is a number-only bump — pasting it is optional.
 
 **Honest offline banner (v6.20)** — the yellow banner said "New entries need a connection, so they are not saved yet", which stopped being true with instant save. It now says the app is showing the copy saved on this device and that new entries are kept here and sent automatically when Google Drive answers. GAS is a number-only bump.
 

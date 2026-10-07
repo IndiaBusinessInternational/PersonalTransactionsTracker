@@ -2,6 +2,7 @@
   "name": "TSM Finance Tracker",
   "short_name": "TSM Finance",
   "description": "Personal income & expense tracker by Dr. T. Sasimurugan",
+  "id": "/PersonalTransactionsTracker/index.html",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#000000",
