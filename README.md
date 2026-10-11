@@ -1,4 +1,6 @@
-# TSM Finance Tracker v6.22
+# TSM Finance Tracker v6.23
+
+**v6.23 (11 Oct 2026)** — long words now break with `overflow-wrap: break-word` instead of `anywhere`, which could split a button label mid-word on a phone. Same block in all three finance trackers. GAS 6.23 is a number-only bump — pasting it is optional.
 
 **Phones edge to edge (v6.22, 11 Oct 2026)** — on a phone the cards, section headers, report and dialogs now run the full width of the screen with 10px inner side padding (top bar 8px), and the page can never be wider than the screen. Only spacing changed; text sizes are unchanged. The same CSS block is in Mini v4.11 and IBI Finance Tracker v5.21. GAS 6.22 is a number-only bump — pasting it is optional.
 
