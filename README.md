@@ -1,4 +1,6 @@
-# TSM Finance Tracker v6.21
+# TSM Finance Tracker v6.22
+
+**Phones edge to edge (v6.22, 11 Oct 2026)** — on a phone the cards, section headers, report and dialogs now run the full width of the screen with 10px inner side padding (top bar 8px), and the page can never be wider than the screen. Only spacing changed; text sizes are unchanged. The same CSS block is in Mini v4.11 and IBI Finance Tracker v5.21. GAS 6.22 is a number-only bump — pasting it is optional.
 
 **Explicit app identity (v6.21, 7 Oct 2026)** — the install manifest now names its id: `"id": "/PersonalTransactionsTracker/index.html"`. That is exactly the id Chrome already computed from `start_url` (verified against the installed app's own record on the CEO's PC), so existing installs carry on unchanged. Writing it down protects the app if `start_url` ever changes, and keeps it from ever sharing the bare-origin id that made an installed IBI Gold Mines open Screen Recorder Studio. GAS 6.21 is a number-only bump — pasting it is optional.
 
