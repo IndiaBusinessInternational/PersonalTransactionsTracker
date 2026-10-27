@@ -1,4 +1,6 @@
-# TSM Finance Tracker v6.24
+# TSM Finance Tracker v6.25
+
+**v6.25 (27 Oct 2026)** — on phones (600px and narrower) the top-bar share icon pushed "Finance Tracker" into an ellipsis, so there **Share this app** moves into the menu (drawer item, all screen sizes); wider screens keep the top-bar icon too. Front end only — `PersonalTransactions_GAS.gs` unchanged.
 
 **v6.24 (27 Oct 2026)** — WhatsApp link preview: `og-banner.jpg` (1200×630 JPEG under 300 KB) with `og:image:type image/jpeg`; the old `og-banner.png` stays deployed. A **Share this app** button (`ibi-share.js`, precached) sits in the top bar after the menu button. Front end only — `PersonalTransactions_GAS.gs` is unchanged (still 6.23), nothing to paste.
 

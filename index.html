@@ -860,6 +860,9 @@ html,body{overflow-x:clip}
   .sheet-foot{padding-left:10px;padding-right:10px}
 }
 /* ══ end PHONES EDGE TO EDGE ══ */
+/* Share this app (27 Oct 2026): on phones the top-bar share icon would squeeze the app name into an ellipsis,
+   so there it lives in the menu (drawer item "Share this app"); wider screens show both. */
+@media(max-width:600px){ .topbar-right ibi-share-button{display:none!important} }
 </style>
 <script src="ibi-share.js" defer data-slot=".topbar-right"></script>
 </head>
@@ -876,7 +879,7 @@ html,body{overflow-x:clip}
            app is named on its own: the tab title, the manifest, the footer, the
            printed report and the social card. -->
       <div class="topbar-title">
-        <div class="app-name"><span class="app-name-text">Finance Tracker</span><span class="ver-badge">v6.24</span></div>
+        <div class="app-name"><span class="app-name-text">Finance Tracker</span><span class="ver-badge">v6.25</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -1224,7 +1227,7 @@ html,body{overflow-x:clip}
   <div id="bankBalList" class="cm-list"></div>
 </div><!-- /viewBal -->
 
-  <div class="footer">TSM Finance Tracker v6.24 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">TSM Finance Tracker v6.25 &mdash; Dr. T. Sasimurugan &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -1240,6 +1243,7 @@ html,body{overflow-x:clip}
   <button class="drawer-item" onclick="closeDrawer();openVoice()"><i class="ti ti-microphone"></i> Add entry by voice</button>
   <button class="drawer-item" onclick="loadAll();closeDrawer()"><i class="ti ti-refresh"></i> Sync with Google Drive</button>
   <button class="drawer-item" id="drawerSignOut" style="display:none" onclick="signOut()"><i class="ti ti-logout"></i> Sign out on this device</button>
+  <button class="drawer-item" onclick="closeDrawer();if(window.IBIShare)IBIShare.open()"><i class="ti ti-share"></i> Share this app</button>
   <button class="drawer-item" onclick="exportCSV();closeDrawer()"><i class="ti ti-download"></i> Export CSV</button>
   <a class="drawer-item" href="https://docs.google.com/spreadsheets/d/1NAGUMsMjvsAGrTa_o0jt1NTD2uJOZPCSw3Qqbg68pVw" target="_blank" onclick="closeDrawer()"><i class="ti ti-external-link"></i> Open Google Sheet</a>
   <div class="drawer-section-label">Settings</div>
@@ -1277,7 +1281,7 @@ html,body{overflow-x:clip}
   <!-- app and backend carry the SAME version number (CEO, 7 Sep 2026, "for easy
        noting"). Both are shown here; a bare number mismatch is only a note, a
        missing feature is what raises the amber prompts. -->
-  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px;align-items:flex-start"><i class="ti ti-info-circle"></i> <span id="aboutVer">App v6.24 · Backend: not connected yet</span></div>
+  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px;align-items:flex-start"><i class="ti ti-info-circle"></i> <span id="aboutVer">App v6.25 · Backend: not connected yet</span></div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -1752,7 +1756,7 @@ html,body{overflow-x:clip}
       <div class="gate-mark"><i class="ti ti-lock"></i></div>
       <div>
         <div class="gate-title" id="gateTitle">TSM Finance Tracker</div>
-        <div class="gate-sub">Dr. T. Sasimurugan &mdash; personal ledger &middot; v6.24</div>
+        <div class="gate-sub">Dr. T. Sasimurugan &mdash; personal ledger &middot; v6.25</div>
       </div>
     </div>
     <div class="gate-h"><i class="ti ti-lock"></i> Sign in</div>
@@ -5776,7 +5780,7 @@ function printReport(){
     <div class="sec">${block(A.expenses,'Expenditure — full listing (paid on the spot + taken on credit)',RED)}</div>
     ${A.settles.length?`<div class="sec">${block(A.settles,'Settlements — full listing (clearing earlier credit; not counted as spend again)',CY)}</div>`:''}
     <div class="sec">${qTbl}</div>
-    <div class="foot"><span>Generated ${esc(genAt)} IST — TSM Finance Tracker v6.24</span><span>indiabusinessinternational@gmail.com</span></div>
+    <div class="foot"><span>Generated ${esc(genAt)} IST — TSM Finance Tracker v6.25</span><span>indiabusinessinternational@gmail.com</span></div>
   </body></html>`;
   const win=window.open('','_blank');
   if(!win){ showToast('Allow pop-ups to print, or use Download CSV','error'); return; }
