@@ -1,4 +1,4 @@
-﻿const CACHE = 'ptt-v6.25.0';
+﻿const CACHE = 'ptt-v6.26.0';
 const ASSETS = ['./index.html', './manifest.json', './ibi-share.js'];
 
 self.addEventListener('install', e => {
