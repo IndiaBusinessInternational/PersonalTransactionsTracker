@@ -1,4 +1,5 @@
-// TSM Finance Tracker — GAS Backend v6.28  (same version number as the web app)
+// TSM Finance Tracker — GAS Backend v6.29  (same version number as the web app)
+// v6.29 (4 Nov 2026): number only (web app actions column fit); paste optional.
 // v6.28 (4 Nov 2026): RECURRING ENTRIES — sheet tab Recurring + daily 6 AM trigger.
 //   After pasting: run installRecurringTrigger once (Allow), THEN Deploy → Manage deployments → New version.
 // v6.18 (4 Oct 2026): SIGN-IN. Every write needs a signed-in token; anonymous reads get no rows.
@@ -46,7 +47,7 @@ const PLAN_HDRS  = ["ID","Month","Side","CommitmentId","Item","Category","Party"
                     "Proposed","Actual","DueDate","PaidDate","Status","PayMode",
                     "PaidBy","TxId","Note","Sort","CreatedAt"];
 
-const APP_VERSION = "6.28";   // kept in step with the web app's badge (7 Sep 2026)
+const APP_VERSION = "6.29";   // kept in step with the web app's badge (7 Sep 2026)
 // Lets a page newer than this deployment detect what it can do, and say
 // "update your Apps Script" instead of failing oddly at Save.
 const FEATURES    = ["plans", "commitments", "paidby", "category", "rid", "balances", "profile", "auth", "serviceKey", "recurring"];   // category: Category column on Transactions

@@ -1,4 +1,6 @@
-# TSM Finance Tracker v6.28
+# TSM Finance Tracker v6.29
+
+**v6.29 (4 Nov 2026)** — ACTIONS COLUMN FIT (Founder: "near edit button, the delete buttons are hidden partially"). The ledger's Actions column was narrower than its two buttons, so the cell cut the delete icon. It is now 92 px on wide screens and grows with the phone text size; both buttons fit at 375/1366/1920 px and every text size. Shared CSS block, byte-identical with IBI FT v5.28. GAS 6.29: number only (paste optional).
 
 **v6.28 (4 Nov 2026)** — RECURRING ENTRIES (Founder: "say I need to add Milk from Ajay on a daily basis"). A Recurring card on the Ledger, an editor (daily or chosen weekdays, monthly, twice a month, every 2/3/4/6 months, yearly; start and end date; pause; stop), a Repeat box on the add form, and a Recurring button on every entry. Templates live in the sheet tab **Recurring**; the Apps Script writes the ledger rows itself (daily trigger about 6 AM IST + every sync) with row ID `RC-<template>-<yyyyMMdd>`: one row per date, missed days caught up, a deleted day never comes back, a paused template not back-filled. Shared block, byte-identical with IBI FT v5.27. **GAS 6.28: paste, run `installRecurringTrigger` once (Allow), then New version.**
 
