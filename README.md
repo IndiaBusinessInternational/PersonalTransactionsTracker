@@ -1,4 +1,8 @@
-# TSM Finance Tracker v6.26
+# TSM Finance Tracker v6.28
+
+**v6.28 (4 Nov 2026)** — RECURRING ENTRIES (Founder: "say I need to add Milk from Ajay on a daily basis"). A Recurring card on the Ledger, an editor (daily or chosen weekdays, monthly, twice a month, every 2/3/4/6 months, yearly; start and end date; pause; stop), a Repeat box on the add form, and a Recurring button on every entry. Templates live in the sheet tab **Recurring**; the Apps Script writes the ledger rows itself (daily trigger about 6 AM IST + every sync) with row ID `RC-<template>-<yyyyMMdd>`: one row per date, missed days caught up, a deleted day never comes back, a paused template not back-filled. Shared block, byte-identical with IBI FT v5.27. **GAS 6.28: paste, run `installRecurringTrigger` once (Allow), then New version.**
+
+**v6.27 (3 Nov 2026)** — bank logos on the Balances cards (shared with IBI FT v5.26 / Mini v4.16).
 
 **v6.26 (27 Oct 2026)** — edge to edge on laptops too (CEO, 27 Oct 2026): the centred 960px column is gone at every width; cards are full-bleed with 10px inner side padding, top bar 8px; balances and commitments sit several cards per row on wide screens; Commitments/Balances notes no longer touch the phone edge. Dialogs stay centred dialogs on laptops. Shared edge block, byte-identical with Mini v4.15 and IBI FT v5.24. GAS unchanged.
 
